@@ -1,15 +1,18 @@
-import socket
-from threading import Thread
+import socket, threading
+
+def scanner(ip, port):
+	test_sock = socket.socket()
+
+	try:
+		connection = test_sock.connect((ip, port))
+		print(f"Порт :${port} открыт")
+		connection.close()
+	except:
+		return
 
 N = 2**16 - 1
+ip = input("IP адресс для сканирования: ")
 
-for port in range(1,100):
-    sock = socket.socket()
-    try:
-        print(port)
-        sock.connect(('127.0.0.1', port))
-        print("Порт", i, "открыт")
-    except:
-        continue
-    finally:
-        sock.close()
+for i in range(N):
+	thread = threading.Thread(target=scanner, args=(ip, i))
+	thread.start()
