@@ -1,20 +1,41 @@
 import socket
+import threading
 
 sock = socket.socket()
-sock.bind(('', 9090))
-sock.listen(0)
-conn, addr = sock.accept()
-print(addr)
+port = 5001
 
-msg = ''
+sock.bind(('localhost', port))
+sock.listen(1)
 
-while True:
-	data = conn.recv(1024)
-	if not data:
-		break
-	msg += data.decode()
-	conn.send(data)
+def handle(connection, clients, id):
+    while True:
+        msg = connection.recv(1024).decode()
+        print(f'Клиент {id}: {msg}\n')
 
-print(msg)
+        if msg == 'exit':
+            clients.remove(connection)
+            break
+        else:
+            for i in clients:
+                if i != connection:
+                    i.send((f'Клиент {id}: ' + msg).encode('utf-8'))
 
-conn.close()
+    print(f'Клиент {id} отключился!')
+    connection.close()
+
+clients = []
+id = 0
+
+try:
+    while True:
+        con, _ = sock.accept()
+
+        print(f'Клиент ${id} подключен, ждем данных...')
+        clients.append(con)
+
+        threading.Thread(target=handle, args=(
+            con, clients, id), daemon=True).start()
+
+        print(f'Сейчас подключено клиентов: ${id}')
+	id += 1
+
